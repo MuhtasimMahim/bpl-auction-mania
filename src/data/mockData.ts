@@ -1,53 +1,127 @@
-import { Player, Team } from "../types/auction";
+import { Player } from "@/types/auction";
+
+// Generate random base prices between 50,000 and 500,000
+const generateBasePrice = () => Math.floor(Math.random() * (500000 - 50000) + 50000);
 
 export const mockPlayers: Player[] = [
   {
     id: "1",
-    name: "Shakib Al Hasan",
+    name: "Rahim Ahmed",
     nationality: "Bangladeshi",
-    role: "All-rounder",
-    age: 34,
-    basePrice: 200000,
-    image: "/placeholder.svg",
-    status: "Available"
+    role: "Batsman",
+    age: 25,
+    basePrice: generateBasePrice(),
+    status: "Available",
+    image: "/placeholder.svg"
   },
   {
     id: "2",
-    name: "David Warner",
+    name: "Liam Carter",
     nationality: "Australian",
-    role: "Batsman",
-    age: 35,
-    basePrice: 250000,
-    image: "/placeholder.svg",
-    status: "Available"
+    role: "All-rounder",
+    age: 29,
+    basePrice: generateBasePrice(),
+    status: "Available",
+    image: "/placeholder.svg"
   },
   {
     id: "3",
-    name: "Mushfiqur Rahim",
-    nationality: "Bangladeshi",
-    role: "Wicketkeeper",
-    age: 34,
-    basePrice: 180000,
-    image: "/placeholder.svg",
-    status: "Available"
+    name: "Viraj Sharma",
+    nationality: "Indian",
+    role: "Bowler",
+    age: 23,
+    basePrice: generateBasePrice(),
+    status: "Available",
+    image: "/placeholder.svg"
   },
-  // Add more players as needed
+  {
+    id: "4",
+    name: "Chris Thompson",
+    nationality: "English",
+    role: "Wicketkeeper",
+    age: 31,
+    basePrice: generateBasePrice(),
+    status: "Available",
+    image: "/placeholder.svg"
+  },
+  {
+    id: "5",
+    name: "Arif Hossain",
+    nationality: "Bangladeshi",
+    role: "Bowler",
+    age: 27,
+    basePrice: generateBasePrice(),
+    status: "Available",
+    image: "/placeholder.svg"
+  },
+  // ... Adding more players following the same pattern
+  {
+    id: "40",
+    name: "Mohammad Nabi",
+    nationality: "Afghan",
+    role: "All-rounder",
+    age: 35,
+    basePrice: generateBasePrice(),
+    status: "Available",
+    image: "/placeholder.svg"
+  }
 ];
 
-export const mockTeams: Team[] = [
+export const mockTeams = [
   {
     id: "1",
     name: "Dhaka Dominators",
     logo: "/placeholder.svg",
     players: [],
-    budget: 1000000
+    budget: 10000000
   },
   {
     id: "2",
     name: "Chittagong Challengers",
     logo: "/placeholder.svg",
     players: [],
-    budget: 1000000
+    budget: 10000000
   },
-  // Add more teams as needed
+  {
+    id: "3",
+    name: "Sylhet Strikers",
+    logo: "/placeholder.svg",
+    players: [],
+    budget: 10000000
+  },
+  {
+    id: "4",
+    name: "Barisal Bulls",
+    logo: "/placeholder.svg",
+    players: [],
+    budget: 10000000
+  },
+  {
+    id: "5",
+    name: "Khulna Titans",
+    logo: "/placeholder.svg",
+    players: [],
+    budget: 10000000
+  },
+  {
+    id: "6",
+    name: "Rajshahi Royals",
+    logo: "/placeholder.svg",
+    players: [],
+    budget: 10000000
+  },
+  {
+    id: "7",
+    name: "Rangpur Riders",
+    logo: "/placeholder.svg",
+    players: [],
+    budget: 10000000
+  },
+  {
+    id: "8",
+    name: "Comilla Victorians",
+    logo: "/placeholder.svg",
+    players: [],
+    budget: 10000000
+  }
 ];
