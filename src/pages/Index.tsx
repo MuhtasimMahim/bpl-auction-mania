@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { RoleSelection } from "@/components/RoleSelection";
+import { TeamOwnerView } from "@/components/TeamOwnerView";
 import { UserRole } from "@/types/auction";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -17,7 +18,17 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      <RoleSelection onRoleSelect={handleRoleSelect} />
+      {!selectedRole ? (
+        <RoleSelection onRoleSelect={handleRoleSelect} />
+      ) : selectedRole === "Team Owner" ? (
+        <TeamOwnerView />
+      ) : (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold">
+            {selectedRole} view is under construction
+          </h2>
+        </div>
+      )}
     </div>
   );
 };
