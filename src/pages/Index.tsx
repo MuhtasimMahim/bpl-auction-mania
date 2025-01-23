@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { RoleSelection } from "@/components/RoleSelection";
 import { TeamOwnerView } from "@/components/TeamOwnerView";
+import { AuctioneerView } from "@/components/AuctioneerView";
 import { UserRole } from "@/types/auction";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
@@ -22,6 +23,8 @@ const Index = () => {
         <RoleSelection onRoleSelect={handleRoleSelect} />
       ) : selectedRole === "Team Owner" ? (
         <TeamOwnerView />
+      ) : selectedRole === "Auctioneer" ? (
+        <AuctioneerView />
       ) : (
         <div className="p-6">
           <h2 className="text-2xl font-bold">
