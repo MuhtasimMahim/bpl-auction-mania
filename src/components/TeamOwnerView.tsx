@@ -111,7 +111,6 @@ export const TeamOwnerView = () => {
 
   const handlePassTurn = async () => {
     try {
-      // Notify the auctioneer about passing the turn
       const { error } = await supabase
         .from("auction_status")
         .update({ status: "in_progress" })
@@ -204,7 +203,7 @@ export const TeamOwnerView = () => {
               <TableCell>{player.nationality}</TableCell>
               <TableCell>{player.role}</TableCell>
               <TableCell>{player.age}</TableCell>
-              <TableCell>${player.basePrice.toLocaleString()}</TableCell>
+              <TableCell>${player.base_price.toLocaleString()}</TableCell>
               <TableCell>{player.status}</TableCell>
             </TableRow>
           ))}

@@ -8,11 +8,12 @@ export interface Player {
   nationality: string;
   role: PlayerRole;
   age: number;
-  basePrice: number;
-  image: string;
-  status: "Available" | "Sold";
-  soldTo?: string;
-  soldAmount?: number;
+  base_price: number;
+  status: "Available" | "Pending" | "Sold";
+  team_id?: string;
+  sold_amount?: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Team {
