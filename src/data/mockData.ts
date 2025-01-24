@@ -1,8 +1,5 @@
 import { Player } from "@/types/auction";
 
-// Generate random base prices between 50,000 and 500,000
-const generateBasePrice = () => Math.floor(Math.random() * (500000 - 50000) + 50000);
-
 export const mockPlayers: Player[] = [
   {
     id: "1",
@@ -10,9 +7,9 @@ export const mockPlayers: Player[] = [
     nationality: "Bangladeshi",
     role: "Batsman",
     age: 25,
-    basePrice: generateBasePrice(),
     status: "Available",
-    image: "/placeholder.svg"
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   {
     id: "2",
@@ -20,9 +17,9 @@ export const mockPlayers: Player[] = [
     nationality: "Australian",
     role: "All-rounder",
     age: 29,
-    basePrice: generateBasePrice(),
     status: "Available",
-    image: "/placeholder.svg"
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   {
     id: "3",
@@ -30,9 +27,9 @@ export const mockPlayers: Player[] = [
     nationality: "Indian",
     role: "Bowler",
     age: 23,
-    basePrice: generateBasePrice(),
     status: "Available",
-    image: "/placeholder.svg"
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   {
     id: "4",
@@ -40,9 +37,9 @@ export const mockPlayers: Player[] = [
     nationality: "English",
     role: "Wicketkeeper",
     age: 31,
-    basePrice: generateBasePrice(),
     status: "Available",
-    image: "/placeholder.svg"
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   {
     id: "5",
@@ -50,20 +47,9 @@ export const mockPlayers: Player[] = [
     nationality: "Bangladeshi",
     role: "Bowler",
     age: 27,
-    basePrice: generateBasePrice(),
     status: "Available",
-    image: "/placeholder.svg"
-  },
-  // ... Adding more players following the same pattern
-  {
-    id: "40",
-    name: "Mohammad Nabi",
-    nationality: "Afghan",
-    role: "All-rounder",
-    age: 35,
-    basePrice: generateBasePrice(),
-    status: "Available",
-    image: "/placeholder.svg"
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   }
 ];
 

@@ -10,55 +10,55 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { mockPlayers, mockTeams } from "@/data/mockData";
-import { AuctionState, Player, Team } from "@/types/auction";
+import { DraftState, Player, Team } from "@/types/auction";
 
 export const AuctioneerView = () => {
   const { toast } = useToast();
-  const [auctionState, setAuctionState] = useState<AuctionState>({
+  const [draftState, setDraftState] = useState<DraftState>({
     status: "not_started",
     currentTeamId: null,
     currentPlayer: null,
     teams: mockTeams,
     availablePlayers: mockPlayers,
-    soldPlayers: [],
+    selectedPlayers: [],
   });
 
-  const startAuction = () => {
-    if (auctionState.status !== "not_started") {
+  const startDraft = () => {
+    if (draftState.status !== "not_started") {
       toast({
         title: "Error",
-        description: "Auction has already started",
+        description: "Draft has already started",
         variant: "destructive",
       });
       return;
     }
 
     const randomTeamIndex = Math.floor(Math.random() * mockTeams.length);
-    setAuctionState((prev) => ({
+    setDraftState((prev) => ({
       ...prev,
       status: "in_progress",
       currentTeamId: mockTeams[randomTeamIndex].id,
     }));
 
     toast({
-      title: "Auction Started",
-      description: `First turn: ${mockTeams[randomTeamIndex].name}`,
+      title: "Draft Started",
+      description: `First pick: ${mockTeams[randomTeamIndex].name}`,
     });
   };
 
-  const pauseAuction = () => {
-    setAuctionState((prev) => ({
+  const pauseDraft = () => {
+    setDraftState((prev) => ({
       ...prev,
       status: prev.status === "paused" ? "in_progress" : "paused",
     }));
 
     toast({
-      title: auctionState.status === "paused" ? "Auction Resumed" : "Auction Paused",
+      title: draftState.status === "paused" ? "Draft Resumed" : "Draft Paused",
     });
   };
 
-  const endAuction = () => {
-    setAuctionState((prev) => ({
+  const endDraft = () => {
+    setDraftState((prev) => ({
       ...prev,
       status: "completed",
       currentTeamId: null,
@@ -66,48 +66,48 @@ export const AuctioneerView = () => {
     }));
 
     toast({
-      title: "Auction Completed",
+      title: "Draft Completed",
       description: "All team rosters have been finalized",
     });
   };
 
   const getCurrentTeam = (): Team | undefined => {
-    return auctionState.teams.find((team) => team.id === auctionState.currentTeamId);
+    return draftState.teams.find((team) => team.id === draftState.currentTeamId);
   };
 
   const moveToNextTeam = () => {
-    const currentIndex = auctionState.teams.findIndex(
-      (team) => team.id === auctionState.currentTeamId
+    const currentIndex = draftState.teams.findIndex(
+      (team) => team.id === draftState.currentTeamId
     );
-    const nextIndex = (currentIndex + 1) % auctionState.teams.length;
+    const nextIndex = (currentIndex + 1) % draftState.teams.length;
     
-    setAuctionState((prev) => ({
+    setDraftState((prev) => ({
       ...prev,
-      currentTeamId: auctionState.teams[nextIndex].id,
+      currentTeamId: draftState.teams[nextIndex].id,
     }));
 
     toast({
       title: "Next Team's Turn",
-      description: `Current turn: ${auctionState.teams[nextIndex].name}`,
+      description: `Current pick: ${draftState.teams[nextIndex].name}`,
     });
   };
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Auctioneer Dashboard</h2>
+        <h2 className="text-3xl font-bold">Draft Manager Dashboard</h2>
         <div className="space-x-4">
-          {auctionState.status === "not_started" && (
-            <Button onClick={startAuction}>Start Auction</Button>
+          {draftState.status === "not_started" && (
+            <Button onClick={startDraft}>Start Draft</Button>
           )}
-          {(auctionState.status === "in_progress" || auctionState.status === "paused") && (
+          {(draftState.status === "in_progress" || draftState.status === "paused") && (
             <>
-              <Button onClick={pauseAuction}>
-                {auctionState.status === "paused" ? "Resume Auction" : "Pause Auction"}
+              <Button onClick={pauseDraft}>
+                {draftState.status === "paused" ? "Resume Draft" : "Pause Draft"}
               </Button>
               <Button onClick={moveToNextTeam}>Next Team</Button>
-              <Button variant="destructive" onClick={endAuction}>
-                End Auction
+              <Button variant="destructive" onClick={endDraft}>
+                End Draft
               </Button>
             </>
           )}
@@ -119,10 +119,10 @@ export const AuctioneerView = () => {
         <div className="border rounded-lg p-6 space-y-4">
           <h3 className="text-xl font-semibold">Current Status</h3>
           <div className="space-y-2">
-            <p>Status: {auctionState.status}</p>
+            <p>Status: {draftState.status}</p>
             <p>Current Team: {getCurrentTeam()?.name || "None"}</p>
-            <p>Available Players: {auctionState.availablePlayers.length}</p>
-            <p>Sold Players: {auctionState.soldPlayers.length}</p>
+            <p>Available Players: {draftState.availablePlayers.length}</p>
+            <p>Selected Players: {draftState.selectedPlayers.length}</p>
           </div>
         </div>
 
@@ -130,11 +130,10 @@ export const AuctioneerView = () => {
         <div className="border rounded-lg p-6 space-y-4">
           <h3 className="text-xl font-semibold">Team Summary</h3>
           <div className="space-y-2">
-            {auctionState.teams.map((team) => (
+            {draftState.teams.map((team) => (
               <div key={team.id} className="flex justify-between">
                 <span>{team.name}</span>
                 <span>Players: {team.players.length}</span>
-                <span>Budget: ${team.budget.toLocaleString()}</span>
               </div>
             ))}
           </div>
@@ -151,18 +150,16 @@ export const AuctioneerView = () => {
               <TableHead>Nationality</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Age</TableHead>
-              <TableHead>Base Price</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {auctionState.availablePlayers.map((player) => (
+            {draftState.availablePlayers.map((player) => (
               <TableRow key={player.id}>
                 <TableCell className="font-medium">{player.name}</TableCell>
                 <TableCell>{player.nationality}</TableCell>
                 <TableCell>{player.role}</TableCell>
                 <TableCell>{player.age}</TableCell>
-                <TableCell>${player.basePrice.toLocaleString()}</TableCell>
                 <TableCell>{player.status}</TableCell>
               </TableRow>
             ))}

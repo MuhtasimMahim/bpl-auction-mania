@@ -1,6 +1,6 @@
 export type PlayerRole = "Batsman" | "Bowler" | "All-rounder" | "Wicketkeeper";
 export type UserRole = "Auctioneer" | "Team Owner" | "Viewer";
-export type AuctionStatus = "not_started" | "in_progress" | "paused" | "completed";
+export type DraftStatus = "not_started" | "in_progress" | "paused" | "completed";
 
 export interface Player {
   id: string;
@@ -8,10 +8,8 @@ export interface Player {
   nationality: string;
   role: PlayerRole;
   age: number;
-  base_price: number;
-  status: "Available" | "Pending" | "Sold";
+  status: "Available" | "Pending" | "Selected";
   team_id?: string;
-  sold_amount?: number;
   created_at: string;
   updated_at: string;
 }
@@ -24,11 +22,11 @@ export interface Team {
   budget: number;
 }
 
-export interface AuctionState {
-  status: AuctionStatus;
+export interface DraftState {
+  status: DraftStatus;
   currentTeamId: string | null;
   currentPlayer: Player | null;
   teams: Team[];
   availablePlayers: Player[];
-  soldPlayers: Player[];
+  selectedPlayers: Player[];
 }
