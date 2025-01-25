@@ -18,7 +18,11 @@ export const AuctioneerView = () => {
     status: "not_started",
     currentTeamId: null,
     currentPlayer: null,
-    teams: mockTeams,
+    teams: mockTeams.map(team => ({
+      ...team,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })),
     availablePlayers: mockPlayers,
     selectedPlayers: [],
   });
@@ -133,7 +137,7 @@ export const AuctioneerView = () => {
             {draftState.teams.map((team) => (
               <div key={team.id} className="flex justify-between">
                 <span>{team.name}</span>
-                <span>Players: {team.players.length}</span>
+                <span>Players: {draftState.selectedPlayers.filter(p => p.team_id === team.id).length}</span>
               </div>
             ))}
           </div>
