@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { mockPlayers, mockTeams } from "@/data/mockData";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { DraftState, Player, Team } from "@/types/auction";
 
 export const AuctioneerView = () => {
@@ -18,56 +19,160 @@ export const AuctioneerView = () => {
     status: "not_started",
     currentTeamId: null,
     currentPlayer: null,
-    teams: mockTeams.map(team => ({
-      ...team,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })),
-    availablePlayers: mockPlayers,
+    teams: [],
+    availablePlayers: [],
     selectedPlayers: [],
   });
 
-  const startDraft = () => {
-    if (draftState.status !== "not_started") {
+  // Fetch teams and players
+  const { data: teams } = useQuery({
+    queryKey: ["teams"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teams")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data as Team[];
+    },
+  });
+
+  const { data: players } = useQuery({
+    queryKey: ["players"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("players")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data as Player[];
+    },
+  });
+
+  // Subscribe to auction status changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('auction-updates')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'auction_status' },
+        (payload) => {
+          setDraftState(prev => ({
+            ...prev,
+            status: payload.new.status as DraftState['status'],
+            currentTeamId: payload.new.current_team_id,
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Fetch initial auction status
+  useEffect(() => {
+    const fetchAuctionStatus = async () => {
+      const { data, error } = await supabase
+        .from("auction_status")
+        .select("*")
+        .single();
+      
+      if (error) {
+        console.error("Error fetching auction status:", error);
+        return;
+      }
+
+      if (data) {
+        setDraftState(prev => ({
+          ...prev,
+          status: data.status as DraftState['status'],
+          currentTeamId: data.current_team_id,
+        }));
+      }
+    };
+
+    fetchAuctionStatus();
+  }, []);
+
+  const startDraft = async () => {
+    if (draftState.status !== "not_started" || !teams?.length) {
       toast({
         title: "Error",
-        description: "Draft has already started",
+        description: "Draft has already started or no teams available",
         variant: "destructive",
       });
       return;
     }
 
-    const randomTeamIndex = Math.floor(Math.random() * mockTeams.length);
-    setDraftState((prev) => ({
-      ...prev,
-      status: "in_progress",
-      currentTeamId: mockTeams[randomTeamIndex].id,
-    }));
+    const randomTeamIndex = Math.floor(Math.random() * teams.length);
+    const randomTeam = teams[randomTeamIndex];
+
+    const { error } = await supabase
+      .from("auction_status")
+      .update({
+        status: "in_progress",
+        current_team_id: randomTeam.id,
+      })
+      .eq("id", "1"); // Assuming we have one auction status record
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to start draft",
+        variant: "destructive",
+      });
+      return;
+    }
 
     toast({
       title: "Draft Started",
-      description: `First pick: ${mockTeams[randomTeamIndex].name}`,
+      description: `First pick: ${randomTeam.name}`,
     });
   };
 
-  const pauseDraft = () => {
-    setDraftState((prev) => ({
-      ...prev,
-      status: prev.status === "paused" ? "in_progress" : "paused",
-    }));
+  const pauseDraft = async () => {
+    const newStatus = draftState.status === "paused" ? "in_progress" : "paused";
+    
+    const { error } = await supabase
+      .from("auction_status")
+      .update({
+        status: newStatus,
+      })
+      .eq("id", "1");
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update draft status",
+        variant: "destructive",
+      });
+      return;
+    }
 
     toast({
       title: draftState.status === "paused" ? "Draft Resumed" : "Draft Paused",
     });
   };
 
-  const endDraft = () => {
-    setDraftState((prev) => ({
-      ...prev,
-      status: "completed",
-      currentTeamId: null,
-      currentPlayer: null,
-    }));
+  const endDraft = async () => {
+    const { error } = await supabase
+      .from("auction_status")
+      .update({
+        status: "completed",
+        current_team_id: null,
+      })
+      .eq("id", "1");
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to end draft",
+        variant: "destructive",
+      });
+      return;
+    }
 
     toast({
       title: "Draft Completed",
@@ -76,25 +181,42 @@ export const AuctioneerView = () => {
   };
 
   const getCurrentTeam = (): Team | undefined => {
-    return draftState.teams.find((team) => team.id === draftState.currentTeamId);
+    return teams?.find((team) => team.id === draftState.currentTeamId);
   };
 
-  const moveToNextTeam = () => {
-    const currentIndex = draftState.teams.findIndex(
+  const moveToNextTeam = async () => {
+    if (!teams?.length) return;
+
+    const currentIndex = teams.findIndex(
       (team) => team.id === draftState.currentTeamId
     );
-    const nextIndex = (currentIndex + 1) % draftState.teams.length;
+    const nextIndex = (currentIndex + 1) % teams.length;
+    const nextTeam = teams[nextIndex];
     
-    setDraftState((prev) => ({
-      ...prev,
-      currentTeamId: draftState.teams[nextIndex].id,
-    }));
+    const { error } = await supabase
+      .from("auction_status")
+      .update({
+        current_team_id: nextTeam.id,
+      })
+      .eq("id", "1");
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to move to next team",
+        variant: "destructive",
+      });
+      return;
+    }
 
     toast({
       title: "Next Team's Turn",
-      description: `Current pick: ${draftState.teams[nextIndex].name}`,
+      description: `Current pick: ${nextTeam.name}`,
     });
   };
+
+  const availablePlayers = players?.filter(p => p.status === "Available") || [];
+  const selectedPlayers = players?.filter(p => p.status !== "Available") || [];
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
@@ -125,8 +247,8 @@ export const AuctioneerView = () => {
           <div className="space-y-2">
             <p>Status: {draftState.status}</p>
             <p>Current Team: {getCurrentTeam()?.name || "None"}</p>
-            <p>Available Players: {draftState.availablePlayers.length}</p>
-            <p>Selected Players: {draftState.selectedPlayers.length}</p>
+            <p>Available Players: {availablePlayers.length}</p>
+            <p>Selected Players: {selectedPlayers.length}</p>
           </div>
         </div>
 
@@ -134,10 +256,10 @@ export const AuctioneerView = () => {
         <div className="border rounded-lg p-6 space-y-4">
           <h3 className="text-xl font-semibold">Team Summary</h3>
           <div className="space-y-2">
-            {draftState.teams.map((team) => (
+            {teams?.map((team) => (
               <div key={team.id} className="flex justify-between">
                 <span>{team.name}</span>
-                <span>Players: {draftState.selectedPlayers.filter(p => p.team_id === team.id).length}</span>
+                <span>Players: {selectedPlayers.filter(p => p.team_id === team.id).length}</span>
               </div>
             ))}
           </div>
@@ -158,7 +280,7 @@ export const AuctioneerView = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {draftState.availablePlayers.map((player) => (
+            {availablePlayers.map((player) => (
               <TableRow key={player.id}>
                 <TableCell className="font-medium">{player.name}</TableCell>
                 <TableCell>{player.nationality}</TableCell>
