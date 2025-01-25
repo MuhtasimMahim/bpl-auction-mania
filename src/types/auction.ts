@@ -17,9 +17,10 @@ export interface Player {
 export interface Team {
   id: string;
   name: string;
-  logo: string;
-  players: Player[];
+  logo: string | null;
   budget: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DraftState {
