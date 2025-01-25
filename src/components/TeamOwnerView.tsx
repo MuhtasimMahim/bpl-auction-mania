@@ -178,7 +178,6 @@ export const TeamOwnerView = () => {
             <TableHead>Nationality</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Age</TableHead>
-            <TableHead>Base Price</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -203,7 +202,6 @@ export const TeamOwnerView = () => {
               <TableCell>{player.nationality}</TableCell>
               <TableCell>{player.role}</TableCell>
               <TableCell>{player.age}</TableCell>
-              <TableCell>${player.base_price.toLocaleString()}</TableCell>
               <TableCell>{player.status}</TableCell>
             </TableRow>
           ))}
