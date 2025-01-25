@@ -1,0 +1,1 @@
+export type UserRole = "Auctioneer" | "Team Owner" | "Viewer";
