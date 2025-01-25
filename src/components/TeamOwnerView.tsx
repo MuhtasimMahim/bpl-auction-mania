@@ -14,12 +14,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { Player, Team } from "@/types/auction";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const TeamOwnerView = () => {
   const { toast } = useToast();
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentTeamId, setCurrentTeamId] = useState<string | null>(null);
+
+  const { data: teams, isLoading: isLoadingTeams } = useQuery({
+    queryKey: ["teams"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teams")
+        .select("*")
+        .order("name");
+      
+      if (error) throw error;
+      return data as Team[];
+    },
+  });
 
   const { data: players, isLoading: isLoadingPlayers } = useQuery({
     queryKey: ["players"],
@@ -33,6 +47,7 @@ export const TeamOwnerView = () => {
       if (error) throw error;
       return data as Player[];
     },
+    enabled: !!selectedTeamId, // Only fetch players when a team is selected
   });
 
   const { data: auctionStatus } = useQuery({
@@ -46,20 +61,22 @@ export const TeamOwnerView = () => {
       if (error) throw error;
       return data;
     },
+    enabled: !!selectedTeamId, // Only fetch auction status when a team is selected
   });
 
   useEffect(() => {
+    if (!selectedTeamId) return;
+
     const channel = supabase
       .channel('auction-updates')
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'auction_status' },
         (payload) => {
-          setCurrentTeamId(payload.new.current_team_id);
           if (payload.new.current_team_id) {
             toast({
               title: "Turn Update",
-              description: `It's ${payload.new.current_team_id === currentTeamId ? 'your' : 'another team\'s'} turn`,
+              description: `It's ${payload.new.current_team_id === selectedTeamId ? 'your' : 'another team\'s'} turn`,
             });
           }
         }
@@ -69,7 +86,15 @@ export const TeamOwnerView = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentTeamId, toast]);
+  }, [selectedTeamId, toast]);
+
+  const handleTeamSelect = (teamId: string) => {
+    setSelectedTeamId(teamId);
+    toast({
+      title: "Team Selected",
+      description: `You are now managing ${teams?.find(team => team.id === teamId)?.name}`,
+    });
+  };
 
   const handlePlayerSelect = (playerId: string) => {
     setSelectedPlayerId(playerId);
@@ -131,15 +156,37 @@ export const TeamOwnerView = () => {
     }
   };
 
-  if (isLoadingPlayers) {
+  if (isLoadingTeams) {
     return (
       <div className="p-6 max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold mb-6">Loading players...</h2>
+        <h2 className="text-3xl font-bold mb-6">Loading teams...</h2>
       </div>
     );
   }
 
-  const isMyTurn = currentTeamId === "your-team-id"; // Replace with actual team ID logic
+  if (!selectedTeamId) {
+    return (
+      <div className="p-6 max-w-6xl mx-auto">
+        <h2 className="text-3xl font-bold mb-6">Select Your Team</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {teams?.map((team) => (
+            <Card 
+              key={team.id}
+              className="cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => handleTeamSelect(team.id)}
+            >
+              <CardHeader>
+                <CardTitle className="text-xl">{team.name}</CardTitle>
+                <p className="text-sm text-gray-500">Budget: ${team.budget.toLocaleString()}</p>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const isMyTurn = auctionStatus?.current_team_id === selectedTeamId;
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
@@ -165,7 +212,7 @@ export const TeamOwnerView = () => {
       {!isMyTurn && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
           <p className="text-yellow-800">
-            Waiting for your turn... Current team: {currentTeamId}
+            Waiting for your turn... Current team: {teams?.find(team => team.id === auctionStatus?.current_team_id)?.name}
           </p>
         </div>
       )}
