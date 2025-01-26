@@ -57,6 +57,7 @@ export const AuctioneerView = () => {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'auction_status' },
         (payload) => {
+          console.log('Received auction status update:', payload);
           setDraftState(prev => ({
             ...prev,
             status: payload.new.status as DraftState['status'],
@@ -85,6 +86,7 @@ export const AuctioneerView = () => {
       }
 
       if (data) {
+        console.log('Initial auction status:', data);
         setDraftState(prev => ({
           ...prev,
           status: data.status as DraftState['status'],
@@ -97,10 +99,11 @@ export const AuctioneerView = () => {
   }, []);
 
   const startDraft = async () => {
-    if (draftState.status !== "not_started" || !teams?.length) {
+    console.log('Starting draft...');
+    if (!teams?.length) {
       toast({
         title: "Error",
-        description: "Draft has already started or no teams available",
+        description: "No teams available to start the draft",
         variant: "destructive",
       });
       return;
@@ -109,27 +112,38 @@ export const AuctioneerView = () => {
     const randomTeamIndex = Math.floor(Math.random() * teams.length);
     const randomTeam = teams[randomTeamIndex];
 
-    const { error } = await supabase
-      .from("auction_status")
-      .update({
-        status: "in_progress",
-        current_team_id: randomTeam.id,
-      })
-      .eq("id", "1"); // Assuming we have one auction status record
+    try {
+      const { error } = await supabase
+        .from("auction_status")
+        .update({
+          status: "in_progress",
+          current_team_id: randomTeam.id,
+        })
+        .eq("id", "1");
 
-    if (error) {
+      if (error) {
+        console.error('Error starting draft:', error);
+        toast({
+          title: "Error",
+          description: "Failed to start draft: " + error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Draft started successfully');
+      toast({
+        title: "Draft Started",
+        description: `First pick: ${randomTeam.name}`,
+      });
+    } catch (err) {
+      console.error('Unexpected error starting draft:', err);
       toast({
         title: "Error",
-        description: "Failed to start draft",
+        description: "An unexpected error occurred while starting the draft",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "Draft Started",
-      description: `First pick: ${randomTeam.name}`,
-    });
   };
 
   const pauseDraft = async () => {
