@@ -13,7 +13,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Player, Team } from "@/types/auction";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const TeamOwnerView = () => {
@@ -47,7 +46,7 @@ export const TeamOwnerView = () => {
       if (error) throw error;
       return data as Player[];
     },
-    enabled: !!selectedTeamId, // Only fetch players when a team is selected
+    enabled: !!selectedTeamId,
   });
 
   const { data: auctionStatus } = useQuery({
@@ -61,7 +60,7 @@ export const TeamOwnerView = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!selectedTeamId, // Only fetch auction status when a team is selected
+    enabled: !!selectedTeamId,
   });
 
   useEffect(() => {
@@ -101,7 +100,7 @@ export const TeamOwnerView = () => {
   };
 
   const handleSubmitSelection = async () => {
-    if (!selectedPlayerId) {
+    if (!selectedPlayerId || !selectedTeamId || !auctionStatus?.id) {
       toast({
         title: "Error",
         description: "Please select a player first",
@@ -114,7 +113,10 @@ export const TeamOwnerView = () => {
     try {
       const { error } = await supabase
         .from("players")
-        .update({ status: "Pending" })
+        .update({ 
+          status: "Pending",
+          team_id: selectedTeamId 
+        })
         .eq("id", selectedPlayerId);
 
       if (error) throw error;
@@ -123,6 +125,8 @@ export const TeamOwnerView = () => {
         title: "Selection Submitted",
         description: "Waiting for auctioneer confirmation",
       });
+      
+      setSelectedPlayerId(null);
     } catch (error) {
       toast({
         title: "Error",
@@ -135,11 +139,23 @@ export const TeamOwnerView = () => {
   };
 
   const handlePassTurn = async () => {
+    if (!auctionStatus?.id) {
+      toast({
+        title: "Error",
+        description: "No auction status found",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("auction_status")
-        .update({ status: "in_progress" })
-        .eq("id", auctionStatus?.id);
+        .update({ 
+          current_team_id: null,
+          status: "in_progress" 
+        })
+        .eq("id", auctionStatus.id);
 
       if (error) throw error;
 

@@ -156,6 +156,15 @@ export const AuctioneerView = () => {
   };
 
   const pauseDraft = async () => {
+    if (!auctionStatus?.id) {
+      toast({
+        title: "Error",
+        description: "No auction status record found",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newStatus = draftState.status === "paused" ? "in_progress" : "paused";
     
     const { error } = await supabase
@@ -163,7 +172,7 @@ export const AuctioneerView = () => {
       .update({
         status: newStatus,
       })
-      .eq("id", "1");
+      .eq("id", auctionStatus.id);
 
     if (error) {
       toast({
@@ -180,13 +189,22 @@ export const AuctioneerView = () => {
   };
 
   const endDraft = async () => {
+    if (!auctionStatus?.id) {
+      toast({
+        title: "Error",
+        description: "No auction status record found",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { error } = await supabase
       .from("auction_status")
       .update({
         status: "completed",
         current_team_id: null,
       })
-      .eq("id", "1");
+      .eq("id", auctionStatus.id);
 
     if (error) {
       toast({
@@ -208,7 +226,14 @@ export const AuctioneerView = () => {
   };
 
   const moveToNextTeam = async () => {
-    if (!teams?.length) return;
+    if (!teams?.length || !auctionStatus?.id) {
+      toast({
+        title: "Error",
+        description: "Missing required data to move to next team",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const currentIndex = teams.findIndex(
       (team) => team.id === draftState.currentTeamId
@@ -221,7 +246,7 @@ export const AuctioneerView = () => {
       .update({
         current_team_id: nextTeam.id,
       })
-      .eq("id", "1");
+      .eq("id", auctionStatus.id);
 
     if (error) {
       toast({
