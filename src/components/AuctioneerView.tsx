@@ -11,9 +11,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DraftState, Player, Team } from "@/types/auction";
+import { DraftState, Player, Team, AuctioneerViewProps } from "@/types/auction";
 
-export const AuctioneerView = () => {
+export const AuctioneerView = ({ roomId }: AuctioneerViewProps) => {
   const { toast } = useToast();
   const [draftState, setDraftState] = useState<DraftState>({
     status: "not_started",
@@ -38,14 +38,14 @@ export const AuctioneerView = () => {
   });
 
   const { data: players } = useQuery({
-    queryKey: ["players"],
+    queryKey: ["room_players", roomId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("players")
-        .select("*")
-        .order("name");
+        .from("room_players")
+        .select("*, player:players(*)")
+        .eq("room_id", roomId);
       if (error) throw error;
-      return data as Player[];
+      return data.map(rp => rp.player) as Player[];
     },
   });
 
@@ -55,7 +55,7 @@ export const AuctioneerView = () => {
       .channel('auction-updates')
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'auction_status' },
+        { event: 'UPDATE', schema: 'public', table: 'room_auction_status' },
         (payload) => {
           console.log('Received auction status update:', payload);
           setDraftState(prev => ({
@@ -74,11 +74,12 @@ export const AuctioneerView = () => {
 
   // Fetch initial auction status
   const { data: auctionStatus } = useQuery({
-    queryKey: ["auction_status"],
+    queryKey: ["room_auction_status", roomId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("auction_status")
+        .from("room_auction_status")
         .select("*")
+        .eq("room_id", roomId)
         .single();
       
       if (error) {

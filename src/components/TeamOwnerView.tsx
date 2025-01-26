@@ -11,11 +11,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Player, Team } from "@/types/auction";
+import { Player, Team, TeamOwnerViewProps } from "@/types/auction";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const TeamOwnerView = () => {
+export const TeamOwnerView = ({ roomId }: TeamOwnerViewProps) => {
   const { toast } = useToast();
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
@@ -35,32 +35,33 @@ export const TeamOwnerView = () => {
   });
 
   const { data: players, isLoading: isLoadingPlayers } = useQuery({
-    queryKey: ["players"],
+    queryKey: ["room_players", roomId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("players")
-        .select("*")
-        .eq("status", "Available")
-        .order("name");
+        .from("room_players")
+        .select("*, player:players(*)")
+        .eq("room_id", roomId)
+        .eq("status", "Available");
       
       if (error) throw error;
-      return data as Player[];
+      return data.map(rp => rp.player) as Player[];
     },
-    enabled: !!selectedTeamId,
+    enabled: !!selectedTeamId && !!roomId,
   });
 
   const { data: auctionStatus } = useQuery({
-    queryKey: ["auction_status"],
+    queryKey: ["room_auction_status", roomId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("auction_status")
+        .from("room_auction_status")
         .select("*")
+        .eq("room_id", roomId)
         .single();
       
       if (error) throw error;
       return data;
     },
-    enabled: !!selectedTeamId,
+    enabled: !!selectedTeamId && !!roomId,
   });
 
   useEffect(() => {
