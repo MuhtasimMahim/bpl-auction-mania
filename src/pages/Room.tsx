@@ -8,6 +8,10 @@ import { UserRole } from "@/types/auction";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface RoomProps {
+  roomId?: string;
+}
+
 const Room = () => {
   const { roomId } = useParams();
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
@@ -48,9 +52,9 @@ const Room = () => {
       {!selectedRole ? (
         <RoleSelection onRoleSelect={handleRoleSelect} />
       ) : selectedRole === "Team Owner" ? (
-        <TeamOwnerView roomId={roomId} />
+        <TeamOwnerView roomId={roomId!} />
       ) : selectedRole === "Auctioneer" ? (
-        <AuctioneerView roomId={roomId} />
+        <AuctioneerView roomId={roomId!} />
       ) : (
         <div className="p-6">
           <h2 className="text-2xl font-bold">
