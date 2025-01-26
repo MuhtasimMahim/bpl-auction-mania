@@ -73,8 +73,9 @@ export const AuctioneerView = () => {
   }, []);
 
   // Fetch initial auction status
-  useEffect(() => {
-    const fetchAuctionStatus = async () => {
+  const { data: auctionStatus } = useQuery({
+    queryKey: ["auction_status"],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("auction_status")
         .select("*")
@@ -82,7 +83,7 @@ export const AuctioneerView = () => {
       
       if (error) {
         console.error("Error fetching auction status:", error);
-        return;
+        throw error;
       }
 
       if (data) {
@@ -93,10 +94,9 @@ export const AuctioneerView = () => {
           currentTeamId: data.current_team_id,
         }));
       }
-    };
-
-    fetchAuctionStatus();
-  }, []);
+      return data;
+    },
+  });
 
   const startDraft = async () => {
     console.log('Starting draft...');
@@ -104,6 +104,15 @@ export const AuctioneerView = () => {
       toast({
         title: "Error",
         description: "No teams available to start the draft",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!auctionStatus?.id) {
+      toast({
+        title: "Error",
+        description: "No auction status record found",
         variant: "destructive",
       });
       return;
@@ -119,7 +128,7 @@ export const AuctioneerView = () => {
           status: "in_progress",
           current_team_id: randomTeam.id,
         })
-        .eq("id", "1");
+        .eq("id", auctionStatus.id);
 
       if (error) {
         console.error('Error starting draft:', error);
