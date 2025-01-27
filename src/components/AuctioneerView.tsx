@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DraftState, AuctioneerViewProps } from "@/types/auction";
+import { Team } from "@/types/team";
+import { Player } from "@/types/player";
 import { DraftControls } from "./auctioneer/DraftControls";
 import { StatusCard } from "./auctioneer/StatusCard";
 import { TeamSummary } from "./auctioneer/TeamSummary";

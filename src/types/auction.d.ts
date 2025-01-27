@@ -1,3 +1,17 @@
+import { Player } from './player';
+import { Team } from './team';
+
+export type DraftStatus = "not_started" | "in_progress" | "paused" | "completed";
+
+export interface DraftState {
+  status: DraftStatus;
+  currentTeamId: string | null;
+  currentPlayer: Player | null;
+  teams: Team[];
+  availablePlayers: Player[];
+  selectedPlayers: Player[];
+}
+
 export interface AuctioneerViewProps {
   roomId: string;
 }
@@ -6,36 +20,8 @@ export interface TeamOwnerViewProps {
   roomId: string;
 }
 
-export interface DraftState {
-  status: "not_started" | "in_progress" | "paused" | "completed";
-  currentTeamId: string | null;
-  currentPlayer: Player | null;
-  teams: Team[];
-  availablePlayers: Player[];
-  selectedPlayers: Player[];
-}
-
-export interface Player {
-  id: string;
-  name: string;
-  nationality: string;
-  role: string;
-  age: number;
-  base_price: number;
-  status: "Available" | "Pending" | "Sold";
-  team_id?: string | null;
-  sold_amount?: number | null;
-}
-
-export interface Team {
-  id: string;
-  name: string;
-  logo?: string;
-  budget: number;
-}
-
 export interface DraftControlsProps {
-  status: DraftState['status'];
+  status: DraftStatus;
   onStart: () => void;
   onPause: () => void;
   onNext: () => void;
@@ -43,7 +29,7 @@ export interface DraftControlsProps {
 }
 
 export interface StatusCardProps {
-  status: DraftState['status'];
+  status: DraftStatus;
   currentTeam?: Team;
   availablePlayersCount: number;
   selectedPlayersCount: number;

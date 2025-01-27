@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { TeamOwnerViewProps } from "@/types/auction";
+import { Team } from "@/types/team";
+import { Player } from "@/types/player";
 import { TeamSelection } from "./team-owner/TeamSelection";
 import { PlayerSelectionTable } from "./team-owner/PlayerSelectionTable";
 import { TeamActions } from "./team-owner/TeamActions";
