@@ -1,10 +1,8 @@
-export type UserRole = "Team Owner" | "Auctioneer" | "Spectator";
-
-export interface TeamOwnerViewProps {
+export interface AuctioneerViewProps {
   roomId: string;
 }
 
-export interface AuctioneerViewProps {
+export interface TeamOwnerViewProps {
   roomId: string;
 }
 
@@ -34,4 +32,48 @@ export interface Team {
   name: string;
   logo?: string;
   budget: number;
+}
+
+export interface DraftControlsProps {
+  status: DraftState['status'];
+  onStart: () => void;
+  onPause: () => void;
+  onNext: () => void;
+  onEnd: () => void;
+}
+
+export interface StatusCardProps {
+  status: DraftState['status'];
+  currentTeam?: Team;
+  availablePlayersCount: number;
+  selectedPlayersCount: number;
+}
+
+export interface TeamSummaryProps {
+  teams: Team[];
+  selectedPlayers: Player[];
+}
+
+export interface PlayersTableProps {
+  players: Player[];
+}
+
+export interface TeamSelectionProps {
+  teams: Team[];
+  onTeamSelect: (teamId: string) => void;
+}
+
+export interface PlayerSelectionTableProps {
+  players: Player[];
+  selectedPlayerId: string | null;
+  onPlayerSelect: (playerId: string) => void;
+  isMyTurn: boolean;
+}
+
+export interface TeamActionsProps {
+  onSubmitSelection: () => void;
+  onPassTurn: () => void;
+  isSubmitting: boolean;
+  isMyTurn: boolean;
+  selectedPlayerId: string | null;
 }

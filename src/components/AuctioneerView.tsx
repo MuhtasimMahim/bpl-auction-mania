@@ -1,17 +1,12 @@
-import { useState, useEffect } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DraftState, Player, Team, AuctioneerViewProps } from "@/types/auction";
+import { DraftState, AuctioneerViewProps } from "@/types/auction";
+import { DraftControls } from "./auctioneer/DraftControls";
+import { StatusCard } from "./auctioneer/StatusCard";
+import { TeamSummary } from "./auctioneer/TeamSummary";
+import { PlayersTable } from "./auctioneer/PlayersTable";
 
 export const AuctioneerView = ({ roomId }: AuctioneerViewProps) => {
   const { toast } = useToast();
@@ -271,76 +266,26 @@ export const AuctioneerView = ({ roomId }: AuctioneerViewProps) => {
     <div className="p-6 max-w-7xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">Draft Manager Dashboard</h2>
-        <div className="space-x-4">
-          {draftState.status === "not_started" && (
-            <Button onClick={startDraft}>Start Draft</Button>
-          )}
-          {(draftState.status === "in_progress" || draftState.status === "paused") && (
-            <>
-              <Button onClick={pauseDraft}>
-                {draftState.status === "paused" ? "Resume Draft" : "Pause Draft"}
-              </Button>
-              <Button onClick={moveToNextTeam}>Next Team</Button>
-              <Button variant="destructive" onClick={endDraft}>
-                End Draft
-              </Button>
-            </>
-          )}
-        </div>
+        <DraftControls
+          status={draftState.status}
+          onStart={startDraft}
+          onPause={pauseDraft}
+          onNext={moveToNextTeam}
+          onEnd={endDraft}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Current Status */}
-        <div className="border rounded-lg p-6 space-y-4">
-          <h3 className="text-xl font-semibold">Current Status</h3>
-          <div className="space-y-2">
-            <p>Status: {draftState.status}</p>
-            <p>Current Team: {getCurrentTeam()?.name || "None"}</p>
-            <p>Available Players: {availablePlayers.length}</p>
-            <p>Selected Players: {selectedPlayers.length}</p>
-          </div>
-        </div>
-
-        {/* Team Summary */}
-        <div className="border rounded-lg p-6 space-y-4">
-          <h3 className="text-xl font-semibold">Team Summary</h3>
-          <div className="space-y-2">
-            {teams?.map((team) => (
-              <div key={team.id} className="flex justify-between">
-                <span>{team.name}</span>
-                <span>Players: {selectedPlayers.filter(p => p.team_id === team.id).length}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <StatusCard
+          status={draftState.status}
+          currentTeam={getCurrentTeam()}
+          availablePlayersCount={availablePlayers.length}
+          selectedPlayersCount={selectedPlayers.length}
+        />
+        <TeamSummary teams={teams || []} selectedPlayers={selectedPlayers} />
       </div>
 
-      {/* Available Players Table */}
-      <div className="border rounded-lg p-6">
-        <h3 className="text-xl font-semibold mb-4">Available Players</h3>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Nationality</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Age</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {availablePlayers.map((player) => (
-              <TableRow key={player.id}>
-                <TableCell className="font-medium">{player.name}</TableCell>
-                <TableCell>{player.nationality}</TableCell>
-                <TableCell>{player.role}</TableCell>
-                <TableCell>{player.age}</TableCell>
-                <TableCell>{player.status}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <PlayersTable players={availablePlayers} />
     </div>
   );
 };

@@ -1,19 +1,11 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Player, Team, TeamOwnerViewProps } from "@/types/auction";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { TeamOwnerViewProps } from "@/types/auction";
+import { TeamSelection } from "./team-owner/TeamSelection";
+import { PlayerSelectionTable } from "./team-owner/PlayerSelectionTable";
+import { TeamActions } from "./team-owner/TeamActions";
 
 export const TeamOwnerView = ({ roomId }: TeamOwnerViewProps) => {
   const { toast } = useToast();
@@ -30,7 +22,7 @@ export const TeamOwnerView = ({ roomId }: TeamOwnerViewProps) => {
         .order("name");
       
       if (error) throw error;
-      return data as Team[];
+      return data;
     },
   });
 
@@ -44,7 +36,7 @@ export const TeamOwnerView = ({ roomId }: TeamOwnerViewProps) => {
         .eq("status", "Available");
       
       if (error) throw error;
-      return data.map(rp => rp.player) as Player[];
+      return data.map(rp => rp.player);
     },
     enabled: !!selectedTeamId && !!roomId,
   });
@@ -182,25 +174,7 @@ export const TeamOwnerView = ({ roomId }: TeamOwnerViewProps) => {
   }
 
   if (!selectedTeamId) {
-    return (
-      <div className="p-6 max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold mb-6">Select Your Team</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {teams?.map((team) => (
-            <Card 
-              key={team.id}
-              className="cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={() => handleTeamSelect(team.id)}
-            >
-              <CardHeader>
-                <CardTitle className="text-xl">{team.name}</CardTitle>
-                <p className="text-sm text-gray-500">Budget: ${team.budget.toLocaleString()}</p>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
+    return <TeamSelection teams={teams || []} onTeamSelect={handleTeamSelect} />;
   }
 
   const isMyTurn = auctionStatus?.current_team_id === selectedTeamId;
@@ -209,68 +183,31 @@ export const TeamOwnerView = ({ roomId }: TeamOwnerViewProps) => {
     <div className="p-6 max-w-6xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">Available Players</h2>
-        <div className="space-x-4">
-          <Button
-            onClick={handleSubmitSelection}
-            disabled={!selectedPlayerId || isSubmitting || !isMyTurn}
-          >
-            {isSubmitting ? "Submitting..." : "Submit Selection"}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handlePassTurn}
-            disabled={!isMyTurn}
-          >
-            Pass Turn
-          </Button>
-        </div>
+        <TeamActions
+          onSubmitSelection={handleSubmitSelection}
+          onPassTurn={handlePassTurn}
+          isSubmitting={isSubmitting}
+          isMyTurn={isMyTurn}
+          selectedPlayerId={selectedPlayerId}
+        />
       </div>
 
       {!isMyTurn && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
           <p className="text-yellow-800">
-            Waiting for your turn... Current team: {teams?.find(team => team.id === auctionStatus?.current_team_id)?.name}
+            Waiting for your turn... Current team:{" "}
+            {teams?.find((team) => team.id === auctionStatus?.current_team_id)
+              ?.name}
           </p>
         </div>
       )}
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">Select</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Nationality</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Age</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {players?.map((player) => (
-            <TableRow key={player.id}>
-              <TableCell>
-                <RadioGroup
-                  value={selectedPlayerId || ""}
-                  onValueChange={handlePlayerSelect}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem
-                      value={player.id}
-                      id={`player-${player.id}`}
-                      disabled={!isMyTurn || player.status !== "Available"}
-                    />
-                  </div>
-                </RadioGroup>
-              </TableCell>
-              <TableCell className="font-medium">{player.name}</TableCell>
-              <TableCell>{player.nationality}</TableCell>
-              <TableCell>{player.role}</TableCell>
-              <TableCell>{player.age}</TableCell>
-              <TableCell>{player.status}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <PlayerSelectionTable
+        players={players || []}
+        selectedPlayerId={selectedPlayerId}
+        onPlayerSelect={handlePlayerSelect}
+        isMyTurn={isMyTurn}
+      />
     </div>
   );
 };
